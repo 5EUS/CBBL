@@ -6,5 +6,5 @@ public interface ICommand
     string Alias { get;  }
     string Description { get; }
     string Usage { get; }
-    void Execute(string[] args);
+    bool Execute(string[] args);
 }

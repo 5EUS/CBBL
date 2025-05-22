@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace CBBL.src.Pieces;
@@ -21,6 +22,24 @@ public class SlidingPieceHandler
         public SquareResult[] BishopResults;
     }
 
-    [DllImport("rmlib", EntryPoint = "GetMagics", CallingConvention = CallingConvention.Cdecl)]
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate Result GetValueDelegate();
+
+    [DllImport("rmlib.so", EntryPoint = "GetMagics", CallingConvention = CallingConvention.Cdecl)]
     public static extern Result GetMagics();
+
+    public static class RMLib
+    {
+        public static IntPtr LoadNativeLibrary()
+        {
+            string libName = "rmlib";
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            DllImportSearchPath searchFlags = DllImportSearchPath.AssemblyDirectory |
+                                              DllImportSearchPath.SafeDirectories |
+                                              DllImportSearchPath.UseDllDirectoryForDependencies;
+            IntPtr libHandle = NativeLibrary.Load(libName, assembly, searchFlags);
+
+            return libHandle;
+        }
+    }
 }

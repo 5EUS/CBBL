@@ -4,7 +4,7 @@ namespace CBBL.src.Interfaces;
 
 public interface IBoard
 {
-    IBoardState BoardState { get; }
+    BoardState State { get; }
 
     IEnumerable<Move> GetLegalMoves();
     IEnumerable<Move> GetLegalMovesForPiece(int squareIndex);

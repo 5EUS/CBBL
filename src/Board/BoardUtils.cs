@@ -3,8 +3,16 @@ using CBBL.src.Debugging;
 
 namespace CBBL.src.Board;
 
+/// <summary>
+/// Conversion and interfacing tools for bitboards
+/// </summary>
 public class BoardUtils
 {
+    /// <summary>
+    /// Integer index to square ID (eg. e4)
+    /// </summary>
+    /// <param name="index">The integer index of the square</param>
+    /// <returns>The square ID</returns>
     public static string IndexToSquare(int index)
     {
         int file = index % BoardGlobals.Instance.NumFiles;
@@ -14,6 +22,11 @@ public class BoardUtils
         return $"{fileChar}{rankChar}";
     }
 
+    /// <summary>
+    /// Square ID (eg e4) to integer index
+    /// </summary>
+    /// <param name="square">The ID of the square</param>
+    /// <returns>Integer index of the given square</returns>
     public static int SquareToIndex(string square)
     {
         if (square.Length != 2)
@@ -38,6 +51,11 @@ public class BoardUtils
         return rank * BoardGlobals.Instance.NumRanks + file;
     }
 
+    /// <summary>
+    /// Prints a stylized given bitboard in the form of a ulong
+    /// </summary>
+    /// <param name="bitboard">The bitboard to print</param>
+    /// <param name="level">Optional: log level to print as</param>
     public static void PrintBitboard(ulong bitboard, LogLevel level = LogLevel.None)
     {
         for (int rank = 7; rank >= 0; rank--)
@@ -55,6 +73,11 @@ public class BoardUtils
         Logger.LogLine(level: level);
     }
 
+    /// <summary>
+    /// Convert a bitboard into an unformatted string representation
+    /// </summary>
+    /// <param name="bitboard">The bitboard to convert</param>
+    /// <returns></returns>
     public static string GetBitboardString(ulong bitboard)
     {
         StringBuilder sb = new();
