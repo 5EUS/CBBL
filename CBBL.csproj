@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Authors>5EUS</Authors>
-    <Version>0.0.3</Version>
+    <Version>0.0.4</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <OutputType>Library</OutputType>
     <Description>Bitboard utility library for game engines.</Description>
