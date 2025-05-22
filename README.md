@@ -26,28 +26,28 @@
 
 1. **Via NuGet**  
 ```bash
-   dotnet add package CBBL
+dotnet add package CBBL
 ```
 
 2. **From source**
 ```bash
-    git clone https://github.com/5EUS/CBBL.git
-    cd CBBL
-    dotnet build
+git clone https://github.com/5EUS/CBBL.git
+cd CBBL
+dotnet build
 ```
 
 ---    
 
 ## Quick Start
 ```csharp
-    using CBBL.src.Implementation;
-    using CBBL.src.Util;
+using CBBL.src.Implementation;
+using CBBL.src.Util;
 
-    var context = ServiceLoader.Instance;
-    var board = new CBBLBoard();
-    context.Init(board);
+var context = ServiceLoader.Instance;
+var board = new CBBLBoard();
+context.Init(board);
 ```
 ---
 
 # License
-    MIT License © 2025 Chris Emrick
+MIT License © 2025 Chris Emrick
