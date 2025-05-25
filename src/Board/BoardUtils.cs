@@ -97,11 +97,11 @@ public class BoardUtils
         sb.AppendLine();
         for (int rank = 7; rank >= 0; rank--)
         {
-            sb.AppendLine($"{rank + 1} ");
+            sb.Append($"{rank + 1} ");
             for (int file = 0; file < 8; file++)
             {
                 int square = rank * 8 + file;
-                sb.AppendLine(GetPieceSymbol(board, square) + " ");
+                sb.Append(GetPieceSymbol(board, square) + " ");
             }
             sb.AppendLine();
         }

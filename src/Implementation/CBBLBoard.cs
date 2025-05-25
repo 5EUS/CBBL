@@ -36,18 +36,6 @@ public class CBBLBoard : IBoard
 
     public void Print()
     {
-        Logger.LogLine();
-        for (int rank = 7; rank >= 0; rank--)
-        {
-            Logger.Log($"{rank + 1} ");
-            for (int file = 0; file < 8; file++)
-            {
-                int square = rank * 8 + file;
-                Logger.Log(BoardUtils.GetPieceSymbol(this, square) + " ");
-            }
-            Logger.LogLine();
-        }
-        Logger.LogLine("  a b c d e f g h");
-        Logger.LogLine();
+        BoardUtils.PrintBoard(this);
     }
 }

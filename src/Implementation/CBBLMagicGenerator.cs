@@ -11,10 +11,10 @@ public class CBBLMagicGenerator : IMagicGenerator
     public RookMagics RookMagics { get; private set; }
     public BishopMagics BishopMagics { get; private set; }
 
-    public CBBLMagicGenerator()
+    public CBBLMagicGenerator(int debug)
     {
         Logger.DualLogLine("Registering sliding piece magics...");
-        Magics = GetMagics(1);
+        Magics = GetMagics(debug);
         Logger.DualLogLine("Successfully registered sliding piece magics");
 
         Logger.DualLogLine();

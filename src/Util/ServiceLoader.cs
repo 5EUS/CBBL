@@ -71,15 +71,17 @@ public abstract class ServiceLoader : BitboardSingleton
     /// Initialize a context and board
     /// </summary>
     /// <param name="board">The board to register</param>
-    public virtual void Init(IBoard board, IAttackTables? attackTables = null)
+    public virtual void Init(IBoard board, int debug = 0, IAttackTables? attackTables = null)
     {
         Logger.Init();
+        if (debug == 0)
+            Logger.SetAltLogLevel(LogLevel.None);
         Logger.DualLogLine();
         Logger.DualLogLine("Starting engine using CBBL...");
         Logger.DualLogLine();
         Board = board;
         if (attackTables == null)
-            AttackTables = new CBBLAttackTables();
+            AttackTables = new CBBLAttackTables(debug);
         else
             AttackTables = attackTables;    
         IsInitialized = true;
