@@ -22,7 +22,7 @@ public abstract class ServiceLoader : BitboardSingleton
     /// The board that the context deals with
     /// </summary>
     private IBoard? _board;
-    public IBoard? Board
+    public IBoard Board
     {
         get
         {
@@ -40,7 +40,7 @@ public abstract class ServiceLoader : BitboardSingleton
     /// Precomputed attack tables for all pieces
     /// </summary>
     private IAttackTables? _attackTables;
-    public IAttackTables? AttackTables
+    public IAttackTables AttackTables
     {
         get
         {
@@ -71,14 +71,17 @@ public abstract class ServiceLoader : BitboardSingleton
     /// Initialize a context and board
     /// </summary>
     /// <param name="board">The board to register</param>
-    public virtual void Init(IBoard board)
+    public virtual void Init(IBoard board, IAttackTables? attackTables = null)
     {
         Logger.Init();
         Logger.DualLogLine();
         Logger.DualLogLine("Starting engine using CBBL...");
         Logger.DualLogLine();
         Board = board;
-        AttackTables = new CBBLAttackTables();
+        if (attackTables == null)
+            AttackTables = new CBBLAttackTables();
+        else
+            AttackTables = attackTables;    
         IsInitialized = true;
         Logger.DualLogLine();
         Logger.DualLogLine("Successfully initialized engine");

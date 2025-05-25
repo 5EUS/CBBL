@@ -2,6 +2,7 @@ using CBBL.src.Board;
 using CBBL.src.Debugging;
 using CBBL.src.Exceptions;
 using CBBL.src.Interfaces;
+using CBBL.src.Pieces;
 
 namespace CBBL.src.Implementation;
 
@@ -25,65 +26,6 @@ public class RookMagics : IPieceMagic
         Init();
     }
 
-    public ulong GenerateAttack(int square, ulong blockers)
-    {
-        ulong attacks = 0UL;
-        int rank = square / BoardGlobals.Instance.NumRanks;
-        int file = square % BoardGlobals.Instance.NumFiles;
-
-        for (int r = rank + 1; r <= BoardGlobals.Instance.NumRanks - 1; r++)
-        {
-            int sq = r * BoardGlobals.Instance.NumRanks + file;
-            attacks |= 1UL << sq;
-            if (((1UL << sq) & blockers) != 0) break;
-        }
-
-        for (int r = rank - 1; r >= 0; r--)
-        {
-            int sq = r * BoardGlobals.Instance.NumRanks + file;
-            attacks |= 1UL << sq;
-            if (((1UL << sq) & blockers) != 0) break;
-        }
-
-        for (int f = file - 1; f >= 0; f--)
-        {
-            int sq = rank * BoardGlobals.Instance.NumRanks + f;
-            attacks |= 1UL << sq;
-            if (((1UL << sq) & blockers) != 0) break;
-        }
-
-        for (int f = file + 1; f <= BoardGlobals.Instance.NumFiles; f++)
-        {
-            int sq = rank * BoardGlobals.Instance.NumRanks + f;
-            attacks |= 1UL << sq;
-            if (((1UL << sq) & blockers) != 0) break;
-        }
-
-        return attacks;
-    }
-
-    public ulong GeneratePremask(int square)
-    {
-        int rank = square / BoardGlobals.Instance.NumRanks;
-        int file = square % BoardGlobals.Instance.NumFiles;
-
-        ulong mask = 0;
-
-        for (int r = rank + 1; r < BoardGlobals.Instance.NumRanks - 1; r++) 
-            mask |= 1UL << (r * BoardGlobals.Instance.NumRanks + file);
-
-        for (int r = rank - 1; r > 0; r--)
-            mask |= 1UL << (r * BoardGlobals.Instance.NumRanks + file);
-
-        for (int f = file + 1; f < BoardGlobals.Instance.NumFiles - 1; f++) 
-            mask |= 1UL << (rank * BoardGlobals.Instance.NumRanks + f);
-
-        for (int f = file - 1; f > 0; f--)
-            mask |= 1UL << (rank * BoardGlobals.Instance.NumRanks + f);
-
-        return mask;
-    }
-
     public void Init()
     {
         Logger.DualLogLine();
@@ -91,8 +33,8 @@ public class RookMagics : IPieceMagic
         Logger.DualLogLine();
         for (int square = 0; square < BoardGlobals.Instance.NumSquares; square++)
         {
-            ulong mask = GeneratePremask(square); 
-            int relevantBits = BoardOps.CountBits(mask);
+            ulong mask = SlidingPieceHandler.RookMask(square);
+            int relevantBits = BoardOps.PopulationCount(mask);
             int tableSize = 1 << relevantBits;
             var squareResult = Generator.Magics.RookResults[square];
             Masks[square] = mask;
@@ -100,12 +42,13 @@ public class RookMagics : IPieceMagic
 
             for (int perm = 0; perm < tableSize; perm++)
             {
-                ulong blockers = BoardOps.GetBlockerPermutation(perm, mask);
+                ulong blockers = SlidingPieceHandler.IndexToPermutation(perm, relevantBits, mask);
+
                 Logger.DualLogLine($"Blocker {perm} at square {square}: {blockers:X16}");
 
-                int index = (int)((blockers * squareResult.Magic) >> squareResult.Shift);
+                int index = SlidingPieceHandler.Transform(blockers, squareResult, relevantBits);
 
-                ulong attack = GenerateAttack(square, blockers);
+                ulong attack = SlidingPieceHandler.RookAttack(square, blockers);
                 Logger.DualLogLine($"Attack perm {perm} at square {square} placed in index {index}: {attack:X16}");
 
                 if (AttackTable[square][index] != 0)

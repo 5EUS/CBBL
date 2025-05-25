@@ -8,15 +8,15 @@ public class CBBLBoardState : BoardState
 {
     public override ulong[] Bitboards { get; } = new ulong[BoardGlobals.Instance.NumPieces];
 
-    public override PlayerColor ActivePlayer => throw new NotImplementedException();
+    public override PlayerColor ActivePlayer { get; } = PlayerColor.White;
 
-    public override bool IsWhiteToMove => throw new NotImplementedException();
+    public override bool IsWhiteToMove { get; } = true;
 
     public override int HalfMoveClock => throw new NotImplementedException();
 
     public override int FullMoveNumber => throw new NotImplementedException();
 
-    public override int? EnPassantSquare => throw new NotImplementedException();
+    public override int? EnPassantSquare { get; } = null;
 
     public override bool CanCastleKingside(bool isWhite)
     {

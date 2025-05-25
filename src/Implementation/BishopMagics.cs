@@ -2,6 +2,7 @@ using CBBL.src.Board;
 using CBBL.src.Debugging;
 using CBBL.src.Exceptions;
 using CBBL.src.Interfaces;
+using CBBL.src.Pieces;
 
 namespace CBBL.src.Implementation;
 
@@ -25,65 +26,6 @@ public class BishopMagics : IPieceMagic
         Init();
     }
 
-    public ulong GenerateAttack(int square, ulong blockers)
-    {
-        ulong attacks = 0UL;
-        int rank = square / BoardGlobals.Instance.NumRanks;
-        int file = square % BoardGlobals.Instance.NumFiles;
-
-        for (int r = rank + 1, f = file - 1; r <= BoardGlobals.Instance.NumRanks - 1 && f >= 0; r++, f--)
-        {
-            int sq = r * BoardGlobals.Instance.NumRanks + f;
-            attacks |= 1UL << sq;
-            if (((1UL << sq) & blockers) != 0) break;
-        }
-
-        for (int r = rank + 1, f = file + 1; r <= BoardGlobals.Instance.NumRanks - 1 && f <= BoardGlobals.Instance.NumFiles - 1; r++, f++)
-        {
-            int sq = r * BoardGlobals.Instance.NumRanks + f;
-            attacks |= 1UL << sq;
-            if (((1UL << sq) & blockers) != 0) break;
-        }
-
-        for (int r = rank - 1, f = file - 1; r >= 0 && f >= 0; r--, f--)
-        {
-            int sq = r * BoardGlobals.Instance.NumRanks + f;
-            attacks |= 1UL << sq;
-            if (((1UL << sq) & blockers) != 0) break;
-        }
-
-        for (int r = rank - 1, f = file + 1; r >= 0 && f <= BoardGlobals.Instance.NumFiles - 1; r--, f++)
-        {
-            int sq = r * BoardGlobals.Instance.NumRanks + f;
-            attacks |= 1UL << sq;
-            if (((1UL << sq) & blockers) != 0) break;
-        }
-
-        return attacks;
-    }
-
-    public ulong GeneratePremask(int square)
-    {
-        int rank = square / BoardGlobals.Instance.NumRanks;
-        int file = square % BoardGlobals.Instance.NumFiles;
-
-        ulong mask = 0;
-
-        for (int r = rank + 1, f = file + 1; r < BoardGlobals.Instance.NumRanks - 1 && f < BoardGlobals.Instance.NumFiles - 1; r++, f++)
-            mask |= 1UL << (r * BoardGlobals.Instance.NumRanks + f);
-
-        for (int r = rank + 1, f = file - 1; r < BoardGlobals.Instance.NumRanks - 1 && f > 0; r++, f--)
-            mask |= 1UL << (r * BoardGlobals.Instance.NumRanks + f);
-
-        for (int r = rank - 1, f = file + 1; r > 0 && f < BoardGlobals.Instance.NumFiles - 1; r--, f++)
-            mask |= 1UL << (r * BoardGlobals.Instance.NumRanks + f);
-
-        for (int r = rank - 1, f = file - 1; r > 0 && f > 0; r--, f--)
-            mask |= 1UL << (r * BoardGlobals.Instance.NumRanks + f);
-
-        return mask;
-    }
-
     public void Init()
     {
         Logger.DualLogLine();
@@ -91,8 +33,8 @@ public class BishopMagics : IPieceMagic
         Logger.DualLogLine();
         for (int square = 0; square < BoardGlobals.Instance.NumSquares; square++)
         {
-            ulong mask = GeneratePremask(square); 
-            int relevantBits = BoardOps.CountBits(mask);
+            ulong mask = SlidingPieceHandler.BishopMask(square);
+            int relevantBits = BoardOps.PopulationCount(mask);
             int tableSize = 1 << relevantBits;
             var squareResult = Generator.Magics.BishopResults[square];
             Masks[square] = mask;
@@ -100,11 +42,12 @@ public class BishopMagics : IPieceMagic
 
             for (int perm = 0; perm < tableSize; perm++)
             {
-                ulong blockers = BoardOps.GetBlockerPermutation(perm, mask);
+                ulong blockers = SlidingPieceHandler.IndexToPermutation(perm, relevantBits, mask);
                 Logger.DualLogLine($"Blocker {perm} at square {square}: {blockers:X16}");
 
-                int index = (int)((blockers * squareResult.Magic) >> squareResult.Shift);
-                ulong attack = GenerateAttack(square, blockers);
+                int index = SlidingPieceHandler.Transform(blockers, squareResult, relevantBits);
+
+                ulong attack = SlidingPieceHandler.BishopAttack(square, blockers);
                 Logger.DualLogLine($"Attack perm {perm} at square {square} placed in index {index}: {attack:X16}");
 
                 if (AttackTable[square][index] != 0)

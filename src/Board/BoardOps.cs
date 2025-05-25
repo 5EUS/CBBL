@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CBBL.src.Board;
 
@@ -49,56 +50,6 @@ public class BoardOps
     public static ulong SouthWest(ulong b) => (b & ~FILE_A) >> 7;
 
     /// <summary>
-    /// Mask for the surrounding squares
-    /// </summary>
-    /// <param name="square">The square to query</param>
-    /// <returns>A mask of the surrounding squares</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ulong Surrounding(int square)
-    {
-        int rank = square / 8;
-        int file = square % 8;
-
-        ulong result = 0UL;
-
-        for (int dr = -1; dr <= 1; dr++)
-        {
-            for (int df = -1; df <= 1; df++)
-            {
-                if (dr == 0 && df == 0)
-                    continue;
-
-                int r = rank + dr;
-                int f = file + df;
-
-                if (r >= 0 && r < 8 && f >= 0 && f < 8)
-                {
-                    result |= 1UL << (r * 8 + f);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Count the number of occupied bits
-    /// </summary>
-    /// <param name="bitboard">The bitboard to query</param>
-    /// <returns>The number of occupied bits</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountBits(ulong bitboard)
-    {
-        int count = 0;
-        while (bitboard != 0)
-        {
-            count++;
-            bitboard &= bitboard - 1;
-        }
-        return count;
-    }
-
-    /// <summary>
     /// Get the bitboard of one square. Useful for aggregating bits in BB creation
     /// </summary>
     /// <param name="square">The square to occupy</param>
@@ -106,35 +57,10 @@ public class BoardOps
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong Bit(string square) => 1UL << BoardUtils.SquareToIndex(square);
 
-    /// <summary>
-    /// Gets the blocker permutation for the given index for the given premask
-    /// </summary>
-    /// <param name="index"></param>
-    /// <param name="premask"></param>
-    /// <returns></returns>
-    public static ulong GetBlockerPermutation(int index, ulong premask)
-    {
-        ulong result = 0UL;
 
-        List<int> validPositions = [];
-        for (int i = 0; i < 64; i++)
-        {
-            if (((premask >> i) & 1UL) == 1UL)
-            {
-                validPositions.Add(i);
-            }
-        }
+    [DllImport("rmlib.so", EntryPoint = "count_1s", CallingConvention = CallingConvention.Cdecl)]
+    public static extern int PopulationCount(ulong b);
 
-        for (int i = 0; i < validPositions.Count; i++)
-        {
-            int position = validPositions[i];
-
-            if (((index >> i) & 1) == 1)
-            {
-                result |= 1UL << position;
-            }
-        }
-
-        return result;
-    }
+    [DllImport("rmlib.so", EntryPoint = "surrounding", CallingConvention = CallingConvention.Cdecl)]
+    public static extern ulong Surrounding(int square);
 }

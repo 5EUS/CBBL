@@ -5,8 +5,6 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBBL", "CBBL.csproj", "{9B883A06-7198-556A-7A5B-A33D74E72074}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBBL.Tests", "CBBL.Tests\CBBL.Tests.csproj", "{DEE1EF48-B1DD-486D-8E41-181852B06722}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,18 +27,6 @@ Global
 		{9B883A06-7198-556A-7A5B-A33D74E72074}.Release|x64.Build.0 = Release|Any CPU
 		{9B883A06-7198-556A-7A5B-A33D74E72074}.Release|x86.ActiveCfg = Release|Any CPU
 		{9B883A06-7198-556A-7A5B-A33D74E72074}.Release|x86.Build.0 = Release|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Debug|x64.Build.0 = Debug|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Debug|x86.Build.0 = Debug|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Release|x64.ActiveCfg = Release|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Release|x64.Build.0 = Release|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Release|x86.ActiveCfg = Release|Any CPU
-		{DEE1EF48-B1DD-486D-8E41-181852B06722}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

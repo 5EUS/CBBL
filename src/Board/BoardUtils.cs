@@ -1,5 +1,7 @@
 using System.Text;
 using CBBL.src.Debugging;
+using CBBL.src.Interfaces;
+using CBBL.src.Pieces;
 
 namespace CBBL.src.Board;
 
@@ -58,19 +60,7 @@ public class BoardUtils
     /// <param name="level">Optional: log level to print as</param>
     public static void PrintBitboard(ulong bitboard, LogLevel level = LogLevel.None)
     {
-        for (int rank = 7; rank >= 0; rank--)
-        {
-            Logger.Log($"{rank + 1} ", level);
-            for (int file = 0; file < 8; file++)
-            {
-                int square = rank * 8 + file;
-                ulong mask = 1UL << square;
-                Logger.Log((bitboard & mask) != 0 ? "1 " : ". ");
-            }
-            Logger.LogLine(level: level);
-        }
-        Logger.LogLine("  a b c d e f g h", level);
-        Logger.LogLine(level: level);
+        Console.Write(GetBitboardString(bitboard));
     }
 
     /// <summary>
@@ -94,5 +84,61 @@ public class BoardUtils
         }
         sb.AppendLine("  a b c d e f g h");
         return sb.ToString();
+    }
+
+    public static void PrintBoard(IBoard board)
+    {
+        Console.Write(GetBoardString(board));
+    }
+
+    public static string GetBoardString(IBoard board)
+    {
+        StringBuilder sb = new();
+        sb.AppendLine();
+        for (int rank = 7; rank >= 0; rank--)
+        {
+            sb.AppendLine($"{rank + 1} ");
+            for (int file = 0; file < 8; file++)
+            {
+                int square = rank * 8 + file;
+                sb.AppendLine(GetPieceSymbol(board, square) + " ");
+            }
+            sb.AppendLine();
+        }
+        sb.AppendLine("  a b c d e f g h");
+        sb.AppendLine();
+        return sb.ToString();
+    }
+
+    public static char GetPieceSymbol(IBoard board, int square)
+    {
+        for (int i = 0; i < BoardGlobals.Instance.NumPieces; i++)
+        {
+            if (((board.State.Bitboards[i] >> square) & 1) != 0)
+            {
+                return PieceToChar((PieceType)i);
+            }
+        }
+        return '.';
+    }
+
+    private static char PieceToChar(PieceType piece)
+    {
+        return piece switch
+        {
+            PieceType.WhitePawn => 'P',
+            PieceType.WhiteKnight => 'N',
+            PieceType.WhiteBishop => 'B',
+            PieceType.WhiteRook => 'R',
+            PieceType.WhiteQueen => 'Q',
+            PieceType.WhiteKing => 'K',
+            PieceType.BlackPawn => 'p',
+            PieceType.BlackKnight => 'n',
+            PieceType.BlackBishop => 'b',
+            PieceType.BlackRook => 'r',
+            PieceType.BlackQueen => 'q',
+            PieceType.BlackKing => 'k',
+            _ => '.'
+        };
     }
 }

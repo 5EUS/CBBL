@@ -10,8 +10,4 @@ public interface IPieceMagic
 
     void Init();
 
-    ulong GeneratePremask(int square);
-
-    ulong GenerateAttack(int square, ulong blockers);
-
 }

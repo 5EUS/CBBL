@@ -1,6 +1,7 @@
 using CBBL.src.Board;
 using CBBL.src.Debugging;
 using CBBL.src.Interfaces;
+using CBBL.src.Pieces;
 
 namespace CBBL.src.Implementation;
 
@@ -24,13 +25,13 @@ public class CBBLLeapingAttackTables : ILeapingAttackTables
         for (int square = 0; square < BoardGlobals.Instance.NumSquares; square++)
         {
             KnightAttacks[square] = GenerateKnightAttacks(square);
-            Logger.DualLogLine($"Knight at square {square} registered attacks {KnightAttacks[square]}");
+            Logger.DualLogLine($"Knight at square {square} registered attacks {KnightAttacks[square]:X16}");
             KingAttacks[square] = GenerateKingAttacks(square);
-            Logger.DualLogLine($"King at square {square} registered attacks {KingAttacks[square]}");
+            Logger.DualLogLine($"King at square {square} registered attacks {KingAttacks[square]:X16}");
             PawnAttacksWhite[square] = GeneratePawnAttacks(square, true);
-            Logger.DualLogLine($"White pawn at square {square} registered attacks {PawnAttacksWhite[square]}");
+            Logger.DualLogLine($"White pawn at square {square} registered attacks {PawnAttacksWhite[square]:X16}");
             PawnAttacksBlack[square] = GeneratePawnAttacks(square, false);
-            Logger.DualLogLine($"Black pawn at square {square} registered attacks {PawnAttacksBlack[square]}");
+            Logger.DualLogLine($"Black pawn at square {square} registered attacks {PawnAttacksBlack[square]:X16}");
 
             Attacks.Add(KnightAttacks[square]);
             Attacks.Add(KingAttacks[square]);
@@ -116,5 +117,28 @@ public class CBBLLeapingAttackTables : ILeapingAttackTables
         }
 
         return attacks;
-    } 
+    }
+
+    public ulong GetAttacksForPiece(PieceType pieceType, int square)
+    {
+        ulong result = 0UL;
+        switch (pieceType)
+        {
+            case PieceType.WhitePawn:
+                result = PawnAttacksWhite[square];
+                break;
+            case PieceType.BlackPawn:
+                result = PawnAttacksBlack[square];
+                break;
+            case PieceType.WhiteKing:
+            case PieceType.BlackKing:
+                result = KingAttacks[square];
+                break;
+            case PieceType.WhiteKnight:
+            case PieceType.BlackKnight:
+                result = KnightAttacks[square];
+                break;
+        }
+        return result;
+    }
 }

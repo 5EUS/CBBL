@@ -36,6 +36,10 @@ cd CBBL
 dotnet build
 ```
 
+### rmlib
+You will also need a compiled copy of rmlib.
+You can download a release from https://github.com/5EUS/rmlib/releases or build it from source
+
 ---    
 
 ## Quick Start

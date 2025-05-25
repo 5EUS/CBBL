@@ -10,6 +10,8 @@ public interface IBoard
     IEnumerable<Move> GetLegalMovesForPiece(int squareIndex);
     IEnumerable<Move> GetLegalMovesForPiece(PieceInfo piece);
 
-    void ExecuteMove(Move move);
+    void Print();
+
+    bool ExecuteMove(Move move);
     void UndoMove();
 }

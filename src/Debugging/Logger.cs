@@ -21,8 +21,10 @@ public enum LogLevel
 /// </summary>
 public static class Logger
 {
-    public static LogLevel CurrentLogLevel { get; private set; } = LogLevel.Info;
-    public static bool DoLog => CurrentLogLevel != LogLevel.None;
+    public static LogLevel FileLogLevel { get; private set; } = LogLevel.Info;
+    public static LogLevel AltLogLevel { get; private set; } = LogLevel.Info;
+    public static bool DoFileLog => FileLogLevel != LogLevel.None;
+    public static bool DoAltLog => AltLogLevel != LogLevel.None;
 
     public static readonly string FolderPath = Path.Combine(PlatformHelper.ProjectRoot, "logs");
     public static readonly string FilePath = Path.Combine(FolderPath, "log.bin");
@@ -33,17 +35,49 @@ public static class Logger
     {
         if (!File.Exists(FolderPath))
             Directory.CreateDirectory(FolderPath);
-        _writer = new(FilePath, true);
+
+        if (File.Exists(FilePath))
+        {
+            using FileStream fs = new(FilePath, FileMode.Open, FileAccess.Read);
+            using StreamReader reader = new(fs);
+
+            string? line = reader.ReadLine();
+
+            if (line != null && long.TryParse(line, out long fileTimeUtc))
+            {
+                var dateTimeUtc = DateTime.FromFileTimeUtc(fileTimeUtc).ToUniversalTime().ToString();
+                dateTimeUtc = dateTimeUtc.Replace('/', '_');
+                dateTimeUtc = dateTimeUtc.Replace(' ', '_');
+                var first = FilePath[..FilePath.LastIndexOf('.')];
+                string ext = ".bin";
+                File.Move(FilePath, first + "_" + dateTimeUtc + ext);
+            }
+            else
+            {
+                DualLogLine("Failed to parse the date.");
+            }
+
+            fs.Close();
+            reader.Close();
+        }
+
+        _writer = new(FilePath, false);
+        _writer.WriteLine(DateTime.Now.ToFileTimeUtc());
     }
 
-    public static void SetLogLevel(LogLevel level)
+    public static void SetFileLogLevel(LogLevel level)
     {
-        CurrentLogLevel = level;
+        FileLogLevel = level;
+    }
+
+    public static void SetAltLogLevel(LogLevel level)
+    {
+        AltLogLevel = level;
     }
 
     public static void LogToFile(string message, LogLevel level = LogLevel.Debug)
     {
-        if (CurrentLogLevel == LogLevel.None)
+        if (FileLogLevel == LogLevel.None)
             return;
 
         _writer?.Write(GetPrefix(level) + message);
@@ -51,7 +85,7 @@ public static class Logger
 
     public static void Log(string message, LogLevel level = LogLevel.Debug)
     {
-        if (CurrentLogLevel == LogLevel.None)
+        if (AltLogLevel == LogLevel.None)
             return;
 
         _altOut.Write(GetPrefix(level) + message);
@@ -59,11 +93,11 @@ public static class Logger
 
     public static void DualLog(string message, LogLevel level = LogLevel.Debug)
     {
-        if (CurrentLogLevel == LogLevel.None)
-            return;
+        if (AltLogLevel != LogLevel.None)
+            _altOut.Write(GetPrefix(level) + message);
 
-        _altOut.Write(GetPrefix(level) + message);
-        _writer?.Write(GetPrefix(level) + message);
+        if (FileLogLevel != LogLevel.None)
+            _writer?.Write(GetPrefix(level) + message);
     }
 
     private static string GetPrefix(LogLevel level)
