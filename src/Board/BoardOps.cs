@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -49,6 +50,27 @@ public class BoardOps
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong SouthWest(ulong b) => (b & ~FILE_A) >> 7;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int PopLsb(ref ulong bitboard)
+    {
+        if (bitboard == 0)
+            return -1;
+
+        ulong lsb = bitboard & (~bitboard + 1);
+        int index = BitOperations.TrailingZeroCount(lsb);
+        bitboard &= bitboard - 1;
+        return index;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetLSB(ulong bitboard)
+    {
+        if (bitboard == 0)
+            return -1;
+
+        return BitOperations.TrailingZeroCount(bitboard);
+    }
+
     /// <summary>
     /// Get the bitboard of one square. Useful for aggregating bits in BB creation
     /// </summary>
@@ -57,10 +79,17 @@ public class BoardOps
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong Bit(string square) => 1UL << BoardUtils.SquareToIndex(square);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong SetBit(ulong bitboard, int index)
+    {
+        return bitboard | (1UL << index);
+    }
+
 
     [DllImport("rmlib.so", EntryPoint = "count_1s", CallingConvention = CallingConvention.Cdecl)]
     public static extern int PopulationCount(ulong b);
 
     [DllImport("rmlib.so", EntryPoint = "surrounding", CallingConvention = CallingConvention.Cdecl)]
     public static extern ulong Surrounding(int square);
+
 }

@@ -4,9 +4,9 @@ using CBBL.src.Exceptions;
 using CBBL.src.Interfaces;
 using CBBL.src.Pieces;
 
-namespace CBBL.src.Implementation;
+namespace CBBL.src.Implementation.AttackTables.Magic;
 
-public class BishopMagics : IPieceMagic
+public class CBBLBishopMagics : IPieceMagic
 {
     public ulong[][] AttackTable { get; }
 
@@ -14,7 +14,7 @@ public class BishopMagics : IPieceMagic
 
     public IMagicGenerator Generator { get; }
 
-    public BishopMagics(IMagicGenerator generator)
+    public CBBLBishopMagics(IMagicGenerator generator)
     {
         Generator = generator;
         Masks = new ulong[BoardGlobals.Instance.NumSquares];
@@ -36,7 +36,7 @@ public class BishopMagics : IPieceMagic
             ulong mask = SlidingPieceHandler.BishopMask(square);
             int relevantBits = BoardOps.PopulationCount(mask);
             int tableSize = 1 << relevantBits;
-            var squareResult = Generator.Magics.BishopResults[square];
+            var squareResult = Generator.GetBishopMagic(square);
             Masks[square] = mask;
             AttackTable[square] = new ulong[tableSize];
 

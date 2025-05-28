@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text;
 using CBBL.src.Debugging;
 using CBBL.src.Interfaces;
@@ -140,5 +141,45 @@ public class BoardUtils
             PieceType.BlackKing => 'k',
             _ => '.'
         };
+    }
+
+    public static PlayerColor BoolToPlayerColor(bool playerColor)
+    {
+        return playerColor ? PlayerColor.White : PlayerColor.Black;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong AllPieces(BoardState boardState)
+    {
+        var boards = boardState.Bitboards;
+        return boards[0] | boards[1] | boards[2] | boards[3] | boards[4] | boards[5] | boards[6]
+            | boards[7] | boards[8] | boards[9] | boards[10] | boards[11];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong WhitePieces(BoardState boardState)
+    {
+        var boards = boardState.Bitboards;
+        return boards[0] | boards[1] | boards[2] | boards[3] | boards[4] | boards[5];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong BlackPieces(BoardState boardState)
+    {
+        var boards = boardState.Bitboards;
+        return boards[6] | boards[7] | boards[8] | boards[9] | boards[10] | boards[11];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong Empties(BoardState boardState)
+    {
+        return ~(WhitePieces(boardState) | BlackPieces(boardState));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong Pawns(BoardState boardState)
+    {
+        return boardState.Bitboards[(int)PieceType.WhitePawn] 
+             | boardState.Bitboards[(int)PieceType.BlackPawn];
     }
 }

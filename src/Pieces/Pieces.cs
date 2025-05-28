@@ -32,4 +32,7 @@ public static class Pieces
     public const ulong BLACK_QUEEN_START = 0x0800000000000000;
     public const ulong BLACK_KING_START = 0x1000000000000000;
 
+    public static PieceType[] WhitePieces => [PieceType.WhitePawn, PieceType.WhiteBishop, PieceType.WhiteKing, PieceType.WhiteKnight, PieceType.WhiteQueen, PieceType.WhiteRook];
+    public static PieceType[] BlackPieces => [PieceType.BlackPawn, PieceType.BlackBishop, PieceType.BlackKing, PieceType.BlackKnight, PieceType.BlackQueen, PieceType.BlackRook];
+
 }

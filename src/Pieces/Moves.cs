@@ -1,3 +1,6 @@
+using System.Text;
+using CBBL.src.Board;
+
 namespace CBBL.src.Pieces;
 
 /// <summary>
@@ -27,6 +30,14 @@ public struct Move(int from, int to, MoveFlag flag = MoveFlag.None)
 }
 
 public class Moves
-{
-
+{ 
+    public static string MoveToString(Move move)
+    {
+        StringBuilder sb = new();
+        sb.AppendLine("From:");
+        sb.Append(BoardUtils.GetBitboardString(BoardOps.SetBit(0UL, move.FromSquare)));
+        sb.AppendLine("To:");
+        sb.Append(BoardUtils.GetBitboardString(BoardOps.SetBit(0UL, move.ToSquare)));
+        return sb.ToString();
+    }
 }

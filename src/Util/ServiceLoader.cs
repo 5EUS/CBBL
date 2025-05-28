@@ -1,7 +1,8 @@
 using CBBL.src.Abstraction;
 using CBBL.src.Debugging;
 using CBBL.src.Exceptions;
-using CBBL.src.Implementation;
+using CBBL.src.Implementation.AttackTables;
+using CBBL.src.Implementation.Movement;
 using CBBL.src.Interfaces;
 
 namespace CBBL.src.Util;
@@ -54,16 +55,22 @@ public abstract class ServiceLoader : BitboardSingleton
         }
     }
 
-    // Instance
     /// <summary>
-    /// The context instance
+    /// Utility class for generating moves given a board position
     /// </summary>
-    private static ServiceLoader? _instance;
-    public static ServiceLoader Instance => _instance ??= new CBBLServiceLoader();
-
-    public static void SetInstance(ServiceLoader serviceLoader)
+    private IMoveGenerator? _moveGenerator;
+    public IMoveGenerator MoveGenerator
     {
-        _instance = serviceLoader;
+        get
+        {
+            if (!IsInitialized || _moveGenerator == null)
+                throw new UninitializedContextException();
+            return _moveGenerator;    
+        }
+        protected set
+        {
+            _moveGenerator = value;
+        }
     }
 
     // Methods
@@ -71,20 +78,32 @@ public abstract class ServiceLoader : BitboardSingleton
     /// Initialize a context and board
     /// </summary>
     /// <param name="board">The board to register</param>
-    public virtual void Init(IBoard board, int debug = 0, IAttackTables? attackTables = null)
+    public virtual void Init(IBoard board, int debug = 0, IAttackTables? attackTables = null, IMoveGenerator? moveGenerator = null)
     {
+        if (IsInitialized)
+            throw new InvalidOperationException("ServiceLoader already initialized!");
+
         Logger.Init();
         if (debug == 0)
-            Logger.SetAltLogLevel(LogLevel.None);
+             Logger.SetAltLogLevel(LogLevel.None);
+             
         Logger.DualLogLine();
         Logger.DualLogLine("Starting engine using CBBL...");
         Logger.DualLogLine();
+
         Board = board;
         if (attackTables == null)
             AttackTables = new CBBLAttackTables(debug);
         else
-            AttackTables = attackTables;    
-        IsInitialized = true;
+            AttackTables = attackTables;
+
+        if (moveGenerator == null)
+            MoveGenerator = new CBBLMoveGenerator(board.State, _attackTables);
+        else
+            MoveGenerator = moveGenerator;
+
+        IsInitialized = true;    
+
         Logger.DualLogLine();
         Logger.DualLogLine("Successfully initialized engine");
         Logger.DualLogLine();

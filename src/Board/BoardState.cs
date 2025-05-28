@@ -6,12 +6,11 @@ namespace CBBL.src.Interfaces;
 
 public abstract class BoardState
 {
-
-    public abstract ulong[] Bitboards { get; }
+    internal abstract ulong[] Bitboards { get; }
 
     public abstract PlayerColor ActivePlayer { get; }
 
-    public abstract bool IsWhiteToMove { get; }
+    public abstract PlayerColor ColorToMove { get; }
     public abstract int HalfMoveClock { get; }
     public abstract int FullMoveNumber { get; }
 
@@ -20,13 +19,14 @@ public abstract class BoardState
 
     public abstract bool CanCastleKingside(bool isWhite);
     public abstract bool CanCastleQueenside(bool isWhite);
-    public abstract int? EnPassantSquare { get; }
+    public abstract bool IsKingInCheck(PlayerColor playerColor);
+    public abstract ulong? EnPassantSquare { get; }
 
-    public abstract ulong GetBitboardFor(PieceType type, bool isWhite);
+    public abstract ulong GetBitboardFor(PieceType type);
 
     public abstract string GetFen();
 
-    public virtual void Init()
+    protected virtual void Init()
     {
         var bitboards = Bitboards;
 

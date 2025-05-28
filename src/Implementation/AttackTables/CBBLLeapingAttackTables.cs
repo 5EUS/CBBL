@@ -3,19 +3,13 @@ using CBBL.src.Debugging;
 using CBBL.src.Interfaces;
 using CBBL.src.Pieces;
 
-namespace CBBL.src.Implementation;
+namespace CBBL.src.Implementation.AttackTables;
 
 public class CBBLLeapingAttackTables : ILeapingAttackTables
 {
-    public ulong[] KnightAttacks { get; } = new ulong[BoardGlobals.Instance.NumSquares];
+    internal ILeapingAttackData Data { get; } = new LeapingAttackData();
 
-    public ulong[] KingAttacks { get; } = new ulong[BoardGlobals.Instance.NumSquares];
-
-    public ulong[] PawnAttacksWhite { get; } = new ulong[BoardGlobals.Instance.NumSquares];
-
-    public ulong[] PawnAttacksBlack { get; } = new ulong[BoardGlobals.Instance.NumSquares];
-
-    public List<ulong> Attacks { get; } = [];
+    internal List<ulong> Attacks { get; } = [];
 
     public CBBLLeapingAttackTables()
     {
@@ -24,19 +18,19 @@ public class CBBLLeapingAttackTables : ILeapingAttackTables
         Logger.DualLogLine();
         for (int square = 0; square < BoardGlobals.Instance.NumSquares; square++)
         {
-            KnightAttacks[square] = GenerateKnightAttacks(square);
-            Logger.DualLogLine($"Knight at square {square} registered attacks {KnightAttacks[square]:X16}");
-            KingAttacks[square] = GenerateKingAttacks(square);
-            Logger.DualLogLine($"King at square {square} registered attacks {KingAttacks[square]:X16}");
-            PawnAttacksWhite[square] = GeneratePawnAttacks(square, true);
-            Logger.DualLogLine($"White pawn at square {square} registered attacks {PawnAttacksWhite[square]:X16}");
-            PawnAttacksBlack[square] = GeneratePawnAttacks(square, false);
-            Logger.DualLogLine($"Black pawn at square {square} registered attacks {PawnAttacksBlack[square]:X16}");
+            Data.KnightAttacks[square] = GenerateKnightAttacks(square);
+            Logger.DualLogLine($"Knight at square {square} registered attacks {Data.KnightAttacks[square]:X16}");
+            Data.KingAttacks[square] = GenerateKingAttacks(square);
+            Logger.DualLogLine($"King at square {square} registered attacks {Data.KingAttacks[square]:X16}");
+            Data.PawnAttacksWhite[square] = GeneratePawnAttacks(square, true);
+            Logger.DualLogLine($"White pawn at square {square} registered attacks {Data.PawnAttacksWhite[square]:X16}");
+            Data.PawnAttacksBlack[square] = GeneratePawnAttacks(square, false);
+            Logger.DualLogLine($"Black pawn at square {square} registered attacks {Data.PawnAttacksBlack[square]:X16}");
 
-            Attacks.Add(KnightAttacks[square]);
-            Attacks.Add(KingAttacks[square]);
-            Attacks.Add(PawnAttacksWhite[square]);
-            Attacks.Add(PawnAttacksBlack[square]);
+            Attacks.Add(Data.KnightAttacks[square]);
+            Attacks.Add(Data.KingAttacks[square]);
+            Attacks.Add(Data.PawnAttacksWhite[square]);
+            Attacks.Add(Data.PawnAttacksBlack[square]);
         }
         Logger.DualLogLine();
         Logger.DualLogLine("Successfully initialized leaping piece attacks");
@@ -125,18 +119,18 @@ public class CBBLLeapingAttackTables : ILeapingAttackTables
         switch (pieceType)
         {
             case PieceType.WhitePawn:
-                result = PawnAttacksWhite[square];
+                result = Data.PawnAttacksWhite[square];
                 break;
             case PieceType.BlackPawn:
-                result = PawnAttacksBlack[square];
+                result = Data.PawnAttacksBlack[square];
                 break;
             case PieceType.WhiteKing:
             case PieceType.BlackKing:
-                result = KingAttacks[square];
+                result = Data.KingAttacks[square];
                 break;
             case PieceType.WhiteKnight:
             case PieceType.BlackKnight:
-                result = KnightAttacks[square];
+                result = Data.KnightAttacks[square];
                 break;
         }
         return result;

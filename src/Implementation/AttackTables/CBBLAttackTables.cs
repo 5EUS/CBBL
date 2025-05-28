@@ -1,6 +1,7 @@
+using CBBL.src.Implementation.AttackTables.Magic;
 using CBBL.src.Interfaces;
 
-namespace CBBL.src.Implementation;
+namespace CBBL.src.Implementation.AttackTables;
 
 public class CBBLAttackTables(int debug) : IAttackTables
 {

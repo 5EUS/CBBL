@@ -6,17 +6,22 @@ namespace CBBL.src.Implementation;
 
 public class CBBLBoardState : BoardState
 {
-    public override ulong[] Bitboards { get; } = new ulong[BoardGlobals.Instance.NumPieces];
+    internal override ulong[] Bitboards { get; } = new ulong[BoardGlobals.Instance.NumPieces];
 
     public override PlayerColor ActivePlayer { get; } = PlayerColor.White;
-
-    public override bool IsWhiteToMove { get; } = true;
 
     public override int HalfMoveClock => throw new NotImplementedException();
 
     public override int FullMoveNumber => throw new NotImplementedException();
 
     public override int? EnPassantSquare { get; } = null;
+
+    public override PlayerColor ColorToMove { get; } = PlayerColor.White;
+
+    public CBBLBoardState()
+    {
+        Init();
+    }
 
     public override bool CanCastleKingside(bool isWhite)
     {
@@ -28,9 +33,9 @@ public class CBBLBoardState : BoardState
         throw new NotImplementedException();
     }
 
-    public override ulong GetBitboardFor(PieceType type, bool isWhite)
+    public override ulong GetBitboardFor(PieceType type)
     {
-        throw new NotImplementedException();
+        return Bitboards[(int)type];
     }
 
     public override string GetFen()
@@ -39,6 +44,11 @@ public class CBBLBoardState : BoardState
     }
 
     public override PieceInfo? GetPieceAt(int squareIndex)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override bool IsKingInCheck(PlayerColor playerColor)
     {
         throw new NotImplementedException();
     }

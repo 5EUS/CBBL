@@ -3,13 +3,13 @@ using CBBL.src.Debugging;
 using CBBL.src.Interfaces;
 using static CBBL.src.Pieces.SlidingPieceHandler;
 
-namespace CBBL.src.Implementation;
+namespace CBBL.src.Implementation.AttackTables.Magic;
 
 public class CBBLMagicGenerator : IMagicGenerator
 {
-    public Result Magics { get; private set; }
-    public RookMagics RookMagics { get; private set; }
-    public BishopMagics BishopMagics { get; private set; }
+    internal Result Magics { get; private set; }
+    internal CBBLRookMagics RookMagics { get; private set; }
+    internal CBBLBishopMagics BishopMagics { get; private set; }
 
     public CBBLMagicGenerator(int debug)
     {
@@ -43,5 +43,20 @@ public class CBBLMagicGenerator : IMagicGenerator
         ulong squareResult = Magics.BishopResults[square];
         int index = (int)((relevant * squareResult) >> shift);
         return BishopMagics.AttackTable[square][index];
+    }
+
+    public ulong GetQueenAttacks(int square, ulong blockers)
+    {
+        return GetRookAttacks(square, blockers) | GetBishopAttacks(square, blockers);
+    }
+
+    public ulong GetRookMagic(int square)
+    {
+        return Magics.RookResults[square];
+    }
+
+    public ulong GetBishopMagic(int square)
+    {
+        return Magics.BishopResults[square];
     }
 }

@@ -4,9 +4,9 @@ using CBBL.src.Exceptions;
 using CBBL.src.Interfaces;
 using CBBL.src.Pieces;
 
-namespace CBBL.src.Implementation;
+namespace CBBL.src.Implementation.AttackTables.Magic;
 
-public class RookMagics : IPieceMagic
+public class CBBLRookMagics : IPieceMagic
 {
     public ulong[][] AttackTable { get; }
 
@@ -14,7 +14,7 @@ public class RookMagics : IPieceMagic
 
     public IMagicGenerator Generator { get; }
 
-    public RookMagics(IMagicGenerator generator)
+    public CBBLRookMagics(IMagicGenerator generator)
     {
         Generator = generator;
         Masks = new ulong[BoardGlobals.Instance.NumSquares];
@@ -36,7 +36,7 @@ public class RookMagics : IPieceMagic
             ulong mask = SlidingPieceHandler.RookMask(square);
             int relevantBits = BoardOps.PopulationCount(mask);
             int tableSize = 1 << relevantBits;
-            var squareResult = Generator.Magics.RookResults[square];
+            var squareResult = Generator.GetRookMagic(square);
             Masks[square] = mask;
             AttackTable[square] = new ulong[tableSize];
 
