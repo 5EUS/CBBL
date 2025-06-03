@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CBBL.src.Interfaces;
 
 namespace CBBL.src.Board;
 
@@ -33,22 +34,22 @@ public class BoardOps
     public static ulong South(ulong b) => b >> 8;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ulong East(ulong b) => (b & ~FILE_H) >> 1;
+    public static ulong East(ulong b) => (b & ~FILE_A) >> 1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ulong West(ulong b) => (b & ~FILE_A) << 1;
+    public static ulong West(ulong b) => (b & ~FILE_H) << 1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ulong NorthEast(ulong b) => (b & ~FILE_H) << 7;
+    public static ulong NorthEast(ulong b) => (b & ~FILE_A) << 7;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ulong NorthWest(ulong b) => (b & ~FILE_A) << 9;
+    public static ulong NorthWest(ulong b) => (b & ~FILE_H) << 9;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ulong SouthEast(ulong b) => (b & ~FILE_H) >> 9;
+    public static ulong SouthEast(ulong b) => (b & ~FILE_A) >> 9;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ulong SouthWest(ulong b) => (b & ~FILE_A) >> 7;
+    public static ulong SouthWest(ulong b) => (b & ~FILE_H) >> 7;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int PopLsb(ref ulong bitboard)
@@ -71,6 +72,12 @@ public class BoardOps
         return BitOperations.TrailingZeroCount(bitboard);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool GetBit(BoardState boardState, int square)
+    {
+        return (BoardUtils.AllPieces(boardState) & (1UL << square)) != 0;
+    }
+
     /// <summary>
     /// Get the bitboard of one square. Useful for aggregating bits in BB creation
     /// </summary>
@@ -85,11 +92,51 @@ public class BoardOps
         return bitboard | (1UL << index);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong Between(int from, int to)
+    {
+        if (from > to)
+            (from, to) = (to, from);
+
+        ulong between = 0UL;
+
+        int fromRank = from / 8;
+        int fromFile = from % 8;
+        int toRank = to / 8;
+        int toFile = to % 8;
+
+        int dr = toRank - fromRank;
+        int df = toFile - fromFile;
+
+        if (dr == 0) // Same rank
+        {
+            for (int f = fromFile + 1; f < toFile; f++)
+                between |= 1UL << (fromRank * 8 + f);
+        }
+        else if (df == 0) // Same file
+        {
+            for (int r = fromRank + 1; r < toRank; r++)
+                between |= 1UL << (r * 8 + fromFile);
+        }
+        else if (Math.Abs(dr) == Math.Abs(df)) // Diagonal
+        {
+            int step = (df > 0) ? 9 : 7; // NE or NW
+            if (dr < 0) step = -step;    // SE or SW
+
+            int current = from + step;
+            while (current != to)
+            {
+                between |= 1UL << current;
+                current += step;
+            }
+        }
+
+        return between;
+    }
 
     [DllImport("rmlib.so", EntryPoint = "count_1s", CallingConvention = CallingConvention.Cdecl)]
     public static extern int PopulationCount(ulong b);
 
     [DllImport("rmlib.so", EntryPoint = "surrounding", CallingConvention = CallingConvention.Cdecl)]
     public static extern ulong Surrounding(int square);
-
 }

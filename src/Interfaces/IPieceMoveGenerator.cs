@@ -4,5 +4,5 @@ namespace CBBL.src.Interfaces;
 
 public interface IPieceMoveGenerator
 {
-    IEnumerable<Move> GenerateMoves(PieceType pieceType);
+    void GenerateMoves(ref List<Move> result, BoardState boardState, PieceType pieceType);
 }

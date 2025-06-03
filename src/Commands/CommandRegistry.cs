@@ -10,9 +10,12 @@ namespace CBBL.src.Commands;
 public class CommandRegistry : BitboardSingleton
 {
     private readonly Dictionary<string, ICommand> _commands = [];
+    private readonly Dictionary<string, ICommand> _aliases = [];
 
     private CommandRegistry()
     {
+        Register(new HelpCommand());
+        Register(new ViewBitboardCommand());
     }
 
     /// <summary>
@@ -28,7 +31,7 @@ public class CommandRegistry : BitboardSingleton
     public void Register(ICommand command)
     {
         _commands[command.Name.ToLower()] = command;
-        _commands[command.Alias.ToLower()] = command;
+        _aliases[command.Alias.ToLower()] = command;
     }
 
     /// <summary>
@@ -44,9 +47,10 @@ public class CommandRegistry : BitboardSingleton
         string name = parts[0].ToLower();
         string[] args = [.. parts.Skip(1)];
 
-        if (_commands.TryGetValue(name, out var command))
+        if (_commands.TryGetValue(name, out var command) || _aliases.TryGetValue(name, out command))
         {
-            return command.Execute(args);
+            command.Execute(args);
+            return true;
         }
 
         Logger.LogToFileLine($"Tried to use command {name}", LogLevel.Warning);
@@ -58,4 +62,6 @@ public class CommandRegistry : BitboardSingleton
     /// All registered commands
     /// </summary>
     public IEnumerable<ICommand> AllCommands => _commands.Values;
+    
+    public IEnumerable<ICommand> AllAliases => _aliases.Values;
 }

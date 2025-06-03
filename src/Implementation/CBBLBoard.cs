@@ -6,31 +6,26 @@ namespace CBBL.src.Implementation;
 
 public class CBBLBoard : IBoard
 {
-    public BoardState State { get; } = new CBBLBoardState();
+    public CBBLBoard(string? fen = null)
+    {
+        State = new CBBLBoardState(fen);
+    }
+
+    public CBBLBoard(PlayerColor color)
+    {
+        State = new CBBLBoardState(color);
+    }
+
+    public BoardState State { get; }
 
     public bool ExecuteMove(Move move)
     {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerable<Move> GetLegalMoves()
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerable<Move> GetLegalMovesForPiece(int squareIndex)
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerable<Move> GetLegalMovesForPiece(PieceInfo piece)
-    {
-        throw new NotImplementedException();
+        return State.ExecuteMove(move);
     }
 
     public void UndoMove()
     {
-        throw new NotImplementedException();
+        State.UndoMove();
     }
 
     public void Print()

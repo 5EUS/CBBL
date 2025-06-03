@@ -19,7 +19,7 @@ public abstract class BaseCommand : ICommand
     {
         if (length < MinArgs || length > MaxArgs)
         {
-            Logger.LogToFileLine($"Command {Name} used incorrectly", LogLevel.Warning);
+            Logger.LogLine($"Command {Name} used incorrectly", LogLevel.Warning);
             Logger.DualLogLine($"Usage: {Name} => {Usage}", LogLevel.Info);
             return false;
         }

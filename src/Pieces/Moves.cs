@@ -14,7 +14,8 @@ public enum MoveFlag
     EnPassant = 4,
     Castling = 8,
     Check = 16,
-    Checkmate = 32
+    Checkmate = 32,
+    DoublePush = 64
 }
 
 /// <summary>
@@ -22,15 +23,16 @@ public enum MoveFlag
 /// </summary>
 /// <param name="from"></param>
 /// <param name="to"></param>
-public struct Move(int from, int to, MoveFlag flag = MoveFlag.None)
+public struct Move(int from, int to, MoveFlag flag = MoveFlag.None, PieceType? promotionPieceType = null)
 {
-    public int FromSquare = from;
-    public int ToSquare = to;
-    public MoveFlag Flag = flag;
+    public int FromSquare { get; } = from;
+    public int ToSquare { get; } = to;
+    public MoveFlag Flag { get; set; } = flag;
+    public PieceType? PromotionPieceType { get; set; } = promotionPieceType;
 }
 
 public class Moves
-{ 
+{
     public static string MoveToString(Move move)
     {
         StringBuilder sb = new();
@@ -39,5 +41,22 @@ public class Moves
         sb.AppendLine("To:");
         sb.Append(BoardUtils.GetBitboardString(BoardOps.SetBit(0UL, move.ToSquare)));
         return sb.ToString();
+    }
+
+    public static bool MovesContainIgnoreFlags(IEnumerable<Move> moves, Move move)
+    {
+        foreach (var m in moves)
+        {
+            if (m.FromSquare == move.FromSquare && m.ToSquare == move.ToSquare)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static bool EqualsIgnoreFlags(Move m, Move inMove)
+    {
+        return m.FromSquare == inMove.FromSquare && m.ToSquare == inMove.ToSquare;
     }
 }

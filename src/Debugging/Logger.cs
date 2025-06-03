@@ -10,7 +10,8 @@ public enum LogLevel
     None = 0,
     Verbose = 6,
     Error = 5,
-    Warning = 3,
+    Warning = 4,
+    Command = 3,
     Info = 2,
     Debug = 1,
     Test = 7
@@ -28,8 +29,8 @@ public static class Logger
 
     public static readonly string FolderPath = Path.Combine(PlatformHelper.ProjectRoot, "logs");
     public static readonly string FilePath = Path.Combine(FolderPath, "log.bin");
-    private static StreamWriter? _writer;
-    private static TextWriter _altOut = Console.Out;
+    public static StreamWriter? Writer { get; private set; }
+    public static TextWriter AltOut { get; private set; } = Console.Out;
 
     public static void Init()
     {
@@ -54,15 +55,15 @@ public static class Logger
             }
             else
             {
-                DualLogLine("Failed to parse the date.");
+                DualLogLine("Failed to parse the date of the latest log file.");
             }
 
             fs.Close();
             reader.Close();
         }
 
-        _writer = new(FilePath, false);
-        _writer.WriteLine(DateTime.Now.ToFileTimeUtc());
+        Writer = new(FilePath, false);
+        Writer.WriteLine(DateTime.Now.ToFileTimeUtc());
     }
 
     public static void SetFileLogLevel(LogLevel level)
@@ -77,27 +78,27 @@ public static class Logger
 
     public static void LogToFile(string message, LogLevel level = LogLevel.Debug)
     {
-        if (FileLogLevel == LogLevel.None)
+        if (FileLogLevel == LogLevel.None && level !> LogLevel.Info)
             return;
 
-        _writer?.Write(GetPrefix(level) + message);
+        Writer?.Write(GetPrefix(level) + message);
     }
 
     public static void Log(string message, LogLevel level = LogLevel.Debug)
     {
-        if (AltLogLevel == LogLevel.None)
+        if (AltLogLevel == LogLevel.None && level !> LogLevel.Info)
             return;
 
-        _altOut.Write(GetPrefix(level) + message);
+        AltOut.Write(GetPrefix(level) + message);
     }
 
     public static void DualLog(string message, LogLevel level = LogLevel.Debug)
     {
-        if (AltLogLevel != LogLevel.None)
-            _altOut.Write(GetPrefix(level) + message);
+        if (AltLogLevel != LogLevel.None || level > LogLevel.Info)
+            AltOut.Write(GetPrefix(level) + message);
 
-        if (FileLogLevel != LogLevel.None)
-            _writer?.Write(GetPrefix(level) + message);
+        if (FileLogLevel != LogLevel.None || level > LogLevel.Info)
+            Writer?.Write(GetPrefix(level) + message);
     }
 
     private static string GetPrefix(LogLevel level)

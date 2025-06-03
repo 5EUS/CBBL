@@ -1,6 +1,7 @@
 using CBBL.src.Board;
 using CBBL.src.Debugging;
 using CBBL.src.Interfaces;
+using CBBL.src.Pieces;
 using static CBBL.src.Pieces.SlidingPieceHandler;
 
 namespace CBBL.src.Implementation.AttackTables.Magic;
@@ -58,5 +59,19 @@ public class CBBLMagicGenerator : IMagicGenerator
     public ulong GetBishopMagic(int square)
     {
         return Magics.BishopResults[square];
+    }
+
+    public ulong GetAttacksForPiece(PieceType pieceType, int square, ulong blockers)
+    {
+        return pieceType switch
+        {
+            PieceType.WhiteRook => GetRookAttacks(square, blockers),
+            PieceType.BlackRook => GetRookAttacks(square, blockers),
+            PieceType.WhiteBishop => GetBishopAttacks(square, blockers),
+            PieceType.BlackBishop => GetBishopAttacks(square, blockers),
+            PieceType.WhiteQueen => GetQueenAttacks(square, blockers),
+            PieceType.BlackQueen => GetQueenAttacks(square, blockers),
+            _ => throw new ArgumentException($"Invalid piece type: {pieceType}")
+        };
     }
 }

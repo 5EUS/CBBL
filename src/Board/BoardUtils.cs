@@ -3,6 +3,7 @@ using System.Text;
 using CBBL.src.Debugging;
 using CBBL.src.Interfaces;
 using CBBL.src.Pieces;
+using CBBL.src.Util;
 
 namespace CBBL.src.Board;
 
@@ -164,6 +165,28 @@ public class BoardUtils
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong WhitePiecesNoKing(BoardState boardState)
+    {
+        var boards = boardState.Bitboards;
+        return boards[0] | boards[1] | boards[2] | boards[3] | boards[4];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong BlackPiecesNoKing(BoardState boardState)
+    {
+        var boards = boardState.Bitboards;
+        return boards[6] | boards[7] | boards[8] | boards[9] | boards[10];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong AllPiecesNoKings(BoardState boardState)
+    {
+        var boards = boardState.Bitboards;
+        return boards[0] | boards[1] | boards[2] | boards[3] | boards[4]
+            | boards[6] | boards[7] | boards[8] | boards[9] | boards[10];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong BlackPieces(BoardState boardState)
     {
         var boards = boardState.Bitboards;
@@ -179,7 +202,13 @@ public class BoardUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong Pawns(BoardState boardState)
     {
-        return boardState.Bitboards[(int)PieceType.WhitePawn] 
+        return boardState.Bitboards[(int)PieceType.WhitePawn]
              | boardState.Bitboards[(int)PieceType.BlackPawn];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsSquareAttackedBy(ulong attacks, int square)
+    {
+        return (attacks & (1UL << square)) != 0;
     }
 }
