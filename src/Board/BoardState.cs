@@ -30,6 +30,7 @@ public abstract class BoardState
     public abstract void UpdateMoves();
 
     public abstract IEnumerable<Move> GetMoves();
+    public abstract ulong GetAttacks();
 
     protected virtual void Init()
     {

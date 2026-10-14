@@ -16,6 +16,8 @@ public class CommandRegistry : BitboardSingleton
     {
         Register(new HelpCommand());
         Register(new ViewBitboardCommand());
+        Register(new IndexToSquareCommand());
+        Register(new SquareToIndexCommand());
     }
 
     /// <summary>

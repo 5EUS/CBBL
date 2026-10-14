@@ -7,6 +7,6 @@ public interface IAIPlayer
 {
     public PlayerColor Color { get; }
 
-    public Task<Move> GetBestMoveAsync();
-    public Move GetBestMove();
+    public Task<Move?> GetBestMoveAsync();
+    public Move? GetBestMove();
 }

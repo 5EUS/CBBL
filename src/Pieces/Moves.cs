@@ -14,7 +14,6 @@ public enum MoveFlag
     EnPassant = 4,
     Castling = 8,
     Check = 16,
-    Checkmate = 32,
     DoublePush = 64
 }
 

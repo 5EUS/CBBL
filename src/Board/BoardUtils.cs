@@ -3,7 +3,6 @@ using System.Text;
 using CBBL.src.Debugging;
 using CBBL.src.Interfaces;
 using CBBL.src.Pieces;
-using CBBL.src.Util;
 
 namespace CBBL.src.Board;
 
@@ -12,6 +11,7 @@ namespace CBBL.src.Board;
 /// </summary>
 public class BoardUtils
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     /// <summary>
     /// Integer index to square ID (eg. e4)
     /// </summary>
@@ -24,8 +24,9 @@ public class BoardUtils
         char fileChar = (char)('a' + file);
         char rankChar = (char)('1' + rank);
         return $"{fileChar}{rankChar}";
-    }
+    }   
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     /// <summary>
     /// Square ID (eg e4) to integer index
     /// </summary>
@@ -55,6 +56,7 @@ public class BoardUtils
         return rank * BoardGlobals.Instance.NumRanks + file;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     /// <summary>
     /// Prints a stylized given bitboard in the form of a ulong
     /// </summary>
@@ -65,6 +67,10 @@ public class BoardUtils
         Console.Write(GetBitboardString(bitboard));
     }
 
+    private readonly static StringBuilder sb = new();
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     /// <summary>
     /// Convert a bitboard into an unformatted string representation
     /// </summary>
@@ -72,7 +78,7 @@ public class BoardUtils
     /// <returns></returns>
     public static string GetBitboardString(ulong bitboard)
     {
-        StringBuilder sb = new();
+        sb.Clear();
         for (int rank = 7; rank >= 0; rank--)
         {
             sb.Append($"{rank + 1} ");
@@ -88,14 +94,16 @@ public class BoardUtils
         return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PrintBoard(IBoard board)
     {
         Console.Write(GetBoardString(board));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string GetBoardString(IBoard board)
     {
-        StringBuilder sb = new();
+        sb.Clear();
         sb.AppendLine();
         for (int rank = 7; rank >= 0; rank--)
         {
@@ -112,6 +120,7 @@ public class BoardUtils
         return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static char GetPieceSymbol(IBoard board, int square)
     {
         for (int i = 0; i < BoardGlobals.Instance.NumPieces; i++)
@@ -124,6 +133,7 @@ public class BoardUtils
         return '.';
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static char PieceToChar(PieceType piece)
     {
         return piece switch
@@ -144,6 +154,7 @@ public class BoardUtils
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PlayerColor BoolToPlayerColor(bool playerColor)
     {
         return playerColor ? PlayerColor.White : PlayerColor.Black;
@@ -210,5 +221,11 @@ public class BoardUtils
     public static bool IsSquareAttackedBy(ulong attacks, int square)
     {
         return (attacks & (1UL << square)) != 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PlayerColor Opposite(PlayerColor color)
+    {
+        return color == PlayerColor.White ? PlayerColor.Black : PlayerColor.White;
     }
 }

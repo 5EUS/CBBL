@@ -21,7 +21,7 @@ public class CBBLPieceMoveGenerator(IAttackTables attackTables) : IPieceMoveGene
         {
             case PieceType.WhiteKnight:
             case PieceType.BlackKnight:
-                GenerateKnightMoves(ref result, bitboard, TargetsFor(boardState, boardState.ColorToMove));
+                GenerateKnightMoves(ref result, boardState, bitboard, TargetsFor(boardState, boardState.ColorToMove));
                 break;
             case PieceType.WhiteKing:
             case PieceType.BlackKing:
@@ -68,7 +68,11 @@ public class CBBLPieceMoveGenerator(IAttackTables attackTables) : IPieceMoveGene
 
             ulong attacks = _attackTables.MagicGenerator.GetQueenAttacks(from, AllPieces(boardState)) & targets;
 
-            while (attacks != 0UL) result.Add(new Move(from, PopLsb(ref attacks)));
+            while (attacks != 0UL)
+            {
+                int to = PopLsb(ref attacks);
+                result.Add(new Move(from, to, IsAttack(boardState, to)));
+            }
         }
     }
 
@@ -81,7 +85,11 @@ public class CBBLPieceMoveGenerator(IAttackTables attackTables) : IPieceMoveGene
 
             ulong attacks = _attackTables.MagicGenerator.GetRookAttacks(from, AllPieces(boardState)) & targets;
 
-            while (attacks != 0UL) result.Add(new Move(from, PopLsb(ref attacks)));
+            while (attacks != 0UL)
+            {
+                int to = PopLsb(ref attacks);
+                result.Add(new Move(from, to, IsAttack(boardState, to)));
+            }
         }
     }
 
@@ -94,12 +102,16 @@ public class CBBLPieceMoveGenerator(IAttackTables attackTables) : IPieceMoveGene
 
             ulong attacks = _attackTables.MagicGenerator.GetBishopAttacks(from, AllPieces(boardState)) & targets;
 
-            while (attacks != 0UL) result.Add(new Move(from, PopLsb(ref attacks)));
+            while (attacks != 0UL) 
+            {
+                int to = PopLsb(ref attacks);
+                result.Add(new Move(from, to, IsAttack(boardState, to)));
+            }
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void GenerateKnightMoves(ref List<Move> result, ulong pieces, ulong targets)
+    private void GenerateKnightMoves(ref List<Move> result, BoardState boardState, ulong pieces, ulong targets)
     {
         while (pieces != 0UL)
         {
@@ -107,7 +119,11 @@ public class CBBLPieceMoveGenerator(IAttackTables attackTables) : IPieceMoveGene
 
             ulong attacks = _attackTables.LeapingAttackTables.GetAttacksForPiece(PieceType.WhiteKnight, from) & targets;
 
-            while (attacks != 0UL) result.Add(new Move(from, PopLsb(ref attacks)));
+            while (attacks != 0UL) 
+            {
+                int to = PopLsb(ref attacks);
+                result.Add(new Move(from, to, IsAttack(boardState, to)));
+            }
         }
     }
 
@@ -120,13 +136,17 @@ public class CBBLPieceMoveGenerator(IAttackTables attackTables) : IPieceMoveGene
 
             ulong attacks = _attackTables.LeapingAttackTables.GetAttacksForPiece(PieceType.WhiteKing, from) & targets;
 
-            while (attacks != 0UL) result.Add(new Move(from, PopLsb(ref attacks)));
+            while (attacks != 0UL) 
+            {
+                int to = PopLsb(ref attacks);
+                result.Add(new Move(from, to, IsAttack(boardState, to)));
+            }
         }
 
         var types = boardState.ColorToMove == PlayerColor.White
             ? Pieces.Pieces.BlackPieces : Pieces.Pieces.WhitePieces;
 
-        var attack = _attackTables.Aggregate(boardState, types);
+        var attack = _attackTables.Aggregate(boardState, types); // TODO
 
         if (boardState.ColorToMove == PlayerColor.White)
         {
@@ -255,5 +275,10 @@ public class CBBLPieceMoveGenerator(IAttackTables attackTables) : IPieceMoveGene
                 PawnPushFor(ref result, enpassants, enpassant_from, MoveFlag.EnPassant);
             }
         }
+    }
+
+    public static MoveFlag IsAttack(BoardState boardState, int to)
+    {
+        return boardState.GetPieceAtSquare(to) != -1 ? MoveFlag.Capture : MoveFlag.None;
     }
 }

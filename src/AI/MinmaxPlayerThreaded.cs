@@ -6,23 +6,79 @@ using CBBL.src.Util;
 
 namespace CBBL.src.AI;
 
-public class MinmaxPlayerThreaded(BoardState boardState, PlayerColor color, int maxDepth = 3) : IAIPlayer
+public class MinmaxPlayerThreaded(BoardState boardState, PlayerColor color, int maxDepth = 3, 
+    float pieceValueMult = 1f, float positionValMult = 1f) : IAIPlayer
 {
-    public PlayerColor Color { get; private set; } = color;
-    public int MaxDepth { get; private set; } = maxDepth;
-    private BoardState _boardState = boardState;
+    public PlayerColor Color { get; } = color;
+    public int MaxDepth { get; } = maxDepth;
 
-    public async Task<Move> GetBestMoveAsync()
+    private readonly BoardState _boardState = boardState;
+    private readonly float _pieceValueMult = pieceValueMult;
+    private readonly float _positionalValueMult = positionValMult;
+
+    public async Task<Move?> GetBestMoveAsync()
     {
         return await Task.Run(GetBestMove);
     }
 
-    public Move GetBestMove()
+    private IEnumerable<Move> OrderMoves(ref IEnumerable<Move> moves)
+    {
+        List<(Move move, float score)> scoredMoves = [];
+
+        foreach (var move in moves)
+        {
+            float score = 0f;
+
+            int attackerTypeInt = _boardState.GetPieceAtSquare(move.FromSquare);
+            int victimTypeInt = _boardState.GetPieceAtSquare(move.ToSquare);
+
+            if (move.Flag.HasFlag(MoveFlag.Capture) && victimTypeInt != -1 && attackerTypeInt != -1)
+            {
+                var victim = (PieceType)victimTypeInt;
+                var attacker = (PieceType)attackerTypeInt;
+
+                int victimValue = (int)(GetPieceValue(victim) * 10);
+                int attackerValue = (int)GetPieceValue(attacker);
+
+                // MVV-LVA: most valuable victim - least valuable attacker
+                score += victimValue - attackerValue;
+            }
+
+            if (move.Flag.HasFlag(MoveFlag.Promotion))
+            {
+                score += move.PromotionPieceType switch
+                {
+                    PieceType.WhiteQueen or PieceType.BlackQueen => 900,
+                    PieceType.WhiteRook or PieceType.BlackRook => 500,
+                    PieceType.WhiteBishop or PieceType.BlackBishop => 300,
+                    PieceType.WhiteKnight or PieceType.BlackKnight => 300,
+                    _ => 0
+                };
+            }
+
+            // Positional bonus
+            if (attackerTypeInt != -1)
+            {
+                var pieceType = (PieceType)attackerTypeInt;
+                score += PositionTable.GetValue(pieceType, move.ToSquare);
+            }
+
+            scoredMoves.Add((move, score));
+        }
+
+        // Order best moves first
+        moves = scoredMoves.OrderByDescending(m => m.score).Select(m => m.move).ToList();
+        return moves;
+    }
+
+    public Move? GetBestMove()
     {
         string fen = _boardState.GetFen();
         Move? result = null;
 
         var moves = _boardState.GetMoves();
+        OrderMoves(ref moves);
+
         Task[] tasks = new Task[moves.Count()];
         var results = new Tuple<Move, float>[moves.Count()];
 
@@ -64,7 +120,7 @@ public class MinmaxPlayerThreaded(BoardState boardState, PlayerColor color, int 
 
         Task.WaitAll(tasks);
 
-        float eval = 0f;
+        float eval = Color == PlayerColor.White ? float.MinValue : float.MaxValue;
         foreach (var res in results)
         {
             if (res == null) continue;
@@ -88,7 +144,7 @@ public class MinmaxPlayerThreaded(BoardState boardState, PlayerColor color, int 
         }
 
         if (result == null)
-            throw new InvalidOperationException("No valid moves found.");
+            return null;
 
         return result.Value;
     }
@@ -102,7 +158,9 @@ public class MinmaxPlayerThreaded(BoardState boardState, PlayerColor color, int 
 
         bool isWhite = copy.ColorToMove == PlayerColor.White;
 
-        foreach (var move in copy.GetMoves())
+        IEnumerable<Move> moves = copy.GetMoves();
+        // OrderMoves(ref moves);
+        foreach (var move in moves)
         {
             if (!copy.ExecuteMove(move))
                 continue;
@@ -136,25 +194,27 @@ public class MinmaxPlayerThreaded(BoardState boardState, PlayerColor color, int 
             var pieceType = (PieceType)i;
             ulong bitboard = copy.GetBitboardFor(pieceType);
 
-            var pieceValue = GetPieceValue(pieceType, bitboard);
+            var pieceValue = GetPieceValue(pieceType, bitboard) * _pieceValueMult;
 
-            var positionalValue = GetPositionalValue(pieceType, bitboard);
+            var positionalValue = GetPositionalValue(pieceType, bitboard) * _positionalValueMult;
 
             // var captureValue = GetCaptureValue(pieceType, copy, bitboard);
 
+            bool piece_is_white = Pieces.Pieces.WhitePieces.Contains(pieceType);
+
             if (copy.ColorToMove == PlayerColor.White)
             {
-                score += pieceValue + positionalValue; 
+                score += piece_is_white ? (pieceValue + positionalValue) : -(pieceValue + positionalValue);
             }
             else
             {
-                score -= pieceValue + positionalValue;
+                score += piece_is_white ? -(pieceValue + positionalValue) : (pieceValue + positionalValue);
             }
         }
 
-        if (copy.IsKingInCheckmate(Color == PlayerColor.White ? PlayerColor.Black : PlayerColor.White))
+        if (copy.IsKingInCheckmate(copy.ColorToMove))
             return float.NegativeInfinity;
-        else if (copy.IsKingInCheckmate(Color))
+        else if (copy.IsKingInCheckmate(BoardUtils.Opposite(copy.ColorToMove)))
             return float.PositiveInfinity;
         else if (copy.IsStalemate())
             return 0f;
@@ -231,8 +291,8 @@ public class MinmaxPlayerThreaded(BoardState boardState, PlayerColor color, int 
             PieceType.BlackRook => 5f,
             PieceType.WhiteQueen => 9f,
             PieceType.BlackQueen => 9f,
-            PieceType.WhiteKing => 1000f,
-            PieceType.BlackKing => 1000f,
+            PieceType.WhiteKing => 120f,
+            PieceType.BlackKing => 120f,
             _ => throw new ArgumentOutOfRangeException(nameof(pieceType), pieceType, null)
         };
     }

@@ -39,6 +39,7 @@ public class HelpCommand : BaseCommand
                 c => c.Name.Equals(commandName, StringComparison.CurrentCultureIgnoreCase)) is { } command)
             {
                 Logger.LogLine($"Command: {command.Name}", LogLevel.Command);
+                Logger.LogLine($"Alias: {command.Alias}", LogLevel.Command);
                 Logger.LogLine($"Description: {command.Description}", LogLevel.Command);
                 Logger.LogLine($"Usage: {command.Usage}", LogLevel.Command);
                 return true;

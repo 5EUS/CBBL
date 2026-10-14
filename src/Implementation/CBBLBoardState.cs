@@ -35,7 +35,8 @@ public class CBBLBoardState : BoardState
     private bool _whiteKingMoved = false;
 
     private List<Move> _moveCache = [];
-    private readonly Stack<(string, List<Move>)> _history = [];
+    private ulong _attackCache = 0UL;
+    private readonly Stack<(string, List<Move>)> _history = []; // TODO GC
 
     public CBBLBoardState(string? fen = null)
     {
@@ -261,7 +262,7 @@ public class CBBLBoardState : BoardState
             {
                 _isBlackInCheck = false;
             }
-        }
+        }  
 
         ColorToMove = (ColorToMove == PlayerColor.White) ? PlayerColor.Black : PlayerColor.White;
         BitboardEventManager.NotifyAfterPieceMoved((PieceType)movingPieceIndex, move.FromSquare, move.ToSquare);
@@ -292,7 +293,7 @@ public class CBBLBoardState : BoardState
 
     public override string GetFen()
     {
-        var sb = new StringBuilder();
+        var sb = new StringBuilder(); // TODO gc
 
         for (int rank = 7; rank >= 0; rank--)
         {
@@ -417,11 +418,17 @@ public class CBBLBoardState : BoardState
     public override void UpdateMoves()
     {
         _moveCache = [.. Context.Instance.MoveGenerator.GenerateMoves(this, MoveType.LEGAL, ColorToMove)];
+       _attackCache = Aggregate();
     }
 
     public override List<Move> GetMoves()
     {
         return _moveCache;
+    }
+
+    public override ulong GetAttacks()
+    {
+        return _attackCache;
     }
 
     public override bool IsKingInCheckmate(PlayerColor playerColor)
@@ -439,6 +446,17 @@ public class CBBLBoardState : BoardState
 
     public override bool IsStalemate()
     {
-        return !_moveCache.Any() && !_isWhiteInCheck && !_isBlackInCheck;
+        return _moveCache.Count == 0 && !_isWhiteInCheck && !_isBlackInCheck;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ulong Aggregate()
+    {
+        ulong result = 0UL;
+        foreach (var move in _moveCache)
+        {
+            result = BoardOps.SetBit(result, move.ToSquare);
+        }
+        return result;
     }
 }

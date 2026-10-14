@@ -72,26 +72,26 @@ public static class PositionTable
         { -30,-20,-20, -10, -10,-20,-20,-30 }
     };
 
-    public static int GetValue(PieceType pieceType, int position)
+    public static float GetValue(PieceType pieceType, int position)
     {
         int rank = position / BoardGlobals.Instance.NumFiles;
         int file = position % BoardGlobals.Instance.NumFiles;
 
+        bool isBlack = Pieces.Pieces.BlackPieces.Contains(pieceType);
+        if (isBlack)
+        {
+            rank = 7 - rank; // TODO store
+        }
+
         return pieceType switch
         {
-            PieceType.WhitePawn => PawnTable[rank, file],
-            PieceType.BlackPawn => PawnTable[7 - rank, file],
-            PieceType.WhiteKnight => KnightTable[rank, file],
-            PieceType.BlackKnight => KnightTable[7 - rank, file],
-            PieceType.WhiteBishop => BishopTable[rank, file],
-            PieceType.BlackBishop => BishopTable[7 - rank, file],
-            PieceType.WhiteRook => RookTable[rank, file],
-            PieceType.BlackRook => RookTable[7 - rank, file],
-            PieceType.WhiteQueen => QueenTable[rank, file],
-            PieceType.BlackQueen => QueenTable[7 - rank, file],
-            PieceType.WhiteKing => KingTable[rank, file],
-            PieceType.BlackKing => KingTable[7 - rank, file],
+            PieceType.WhitePawn or PieceType.BlackPawn => PawnTable[rank, file],
+            PieceType.WhiteKnight or PieceType.BlackKnight => KnightTable[rank, file],
+            PieceType.WhiteBishop or PieceType.BlackBishop => BishopTable[rank, file],
+            PieceType.WhiteRook or PieceType.BlackRook => RookTable[rank, file],
+            PieceType.WhiteQueen or PieceType.BlackQueen => QueenTable[rank, file],
+            PieceType.WhiteKing or PieceType.BlackKing => KingTable[rank, file],
             _ => 0
-        };
+        }; 
     }
 }

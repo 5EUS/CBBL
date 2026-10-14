@@ -7,7 +7,9 @@ namespace CBBL.src.Implementation.Movement;
 public class CBBLMoveGenerator(IAttackTables attackTables) : IMoveGenerator
 {
     public IPieceMoveGenerator Generator { get; } = new CBBLPieceMoveGenerator(attackTables);
+    private IAttackTables _attackTables = attackTables;
 
+    // TODO Span instead of IEnumerable
     public IEnumerable<Move> GenerateMoves(BoardState boardState, MoveType moveType, PlayerColor? color = null)
     {
         color ??= boardState.ColorToMove;
@@ -31,7 +33,7 @@ public class CBBLMoveGenerator(IAttackTables attackTables) : IMoveGenerator
         for (int i = 0; i < psuedo.Count; i++)
         {
             var move = psuedo[i];
-            var result = IsMoveLegal(boardState, move);
+            var result = CheckLegalityAndCheck(boardState, move);
             if (result.Item1) legal.Add(move);
             if (result.Item2) checks.Add(legal.IndexOf(move));
         }
@@ -70,19 +72,19 @@ public class CBBLMoveGenerator(IAttackTables attackTables) : IMoveGenerator
         ulong kingBB = boardState.GetBitboardFor(kingType);
         int kingSquare = BoardOps.GetLSB(kingBB);
         var enemyColor = color == PlayerColor.White ? PlayerColor.Black : PlayerColor.White;
-        var threats = GeneratePseudoLegalMoves(boardState, enemyColor);
+        var threats = boardState.GetMoves();
 
         // 1. Find checking pieces
         var checkers = 0UL;
-        threats.Where(m => m.ToSquare == kingSquare)
-            .ToList().ForEach(m => checkers |= BoardOps.SetBit(0UL, m.FromSquare));
+        threats.Where(m => m.Flag.HasFlag(MoveFlag.Check))
+            .ToList().ForEach(m => checkers = BoardOps.SetBit(checkers, m.ToSquare));
 
         // 2. King moves (that do not move into check)
         List<Move> kingMoves = [];
         Generator.GenerateMoves(ref kingMoves, boardState, kingType);
         foreach (var move in kingMoves)
         {
-            if (IsMoveLegal(boardState, move).Item1)
+            if (CheckLegalityAndCheck(boardState, move).Item1)
                 results.Add(move);
         }
 
@@ -119,39 +121,86 @@ public class CBBLMoveGenerator(IAttackTables attackTables) : IMoveGenerator
     }
 
 
-    private (bool,bool) IsMoveLegal(BoardState boardState, Move move)
+    private (bool,bool) CheckLegalityAndCheck(BoardState boardState, Move move)
     {
-        if (!boardState.ExecuteMove(move))
-            return new(false, false);
+        // legality
 
-        bool check = false;    
+        // get some info
+        var move_color = boardState.ColorToMove;
+        var move_king_type = move_color == PlayerColor.White ? PieceType.WhiteKing : PieceType.BlackKing;
+        ulong move_king_square = boardState.GetBitboardFor(move_king_type);
+        var move_piece_type = (PieceType)boardState.GetPieceAtSquare(move.FromSquare);
+        if (move_piece_type == PieceType.WhiteKing || move_piece_type == PieceType.BlackKing)
+            move_king_square = BoardOps.SetBit(0UL, move.ToSquare);
+        int move_king_square_int = BoardOps.GetLSB(move_king_square);
+        ulong opponent_pieces = move_color == PlayerColor.White ? BoardUtils.BlackPieces(boardState) : BoardUtils.WhitePieces(boardState);
+        opponent_pieces &= ~BoardOps.SetBit(0UL, move.ToSquare); // simulate capture 
 
-        // check for legality
-        var kingType = boardState.ColorToMove == PlayerColor.Black // move's king
-            ? PieceType.WhiteKing : PieceType.BlackKing;
+        // filter piece squares based on precalculated danger mask
+        ulong move_legality_mask = _attackTables.KingDangerMask[move_king_square_int];
+        ulong legality_occupancy = move_legality_mask & opponent_pieces;
+        ulong blockers = BoardUtils.AllPiecesNoKings(boardState) 
+            & (~BoardOps.SetBit(0UL, move.FromSquare) | BoardOps.SetBit(0UL, move.ToSquare)); // remove potential blockers
 
-        var moves = GeneratePseudoLegalMoves(boardState);    
-
-        bool isLegal = !moves
-            .Any(m => m.ToSquare == BoardOps.GetLSB(boardState.GetBitboardFor(kingType)));
-
-        // also check for check on opponent's king
-        if (isLegal)
+        bool is_legal = true;
+        while (legality_occupancy != 0)
         {
-            kingType = boardState.ColorToMove == PlayerColor.Black // opponent's king
-                ? PieceType.BlackKing : PieceType.WhiteKing;
+            int square = BoardOps.GetLSB(legality_occupancy);
+            var type = (PieceType)boardState.GetPieceAtSquare(square);
+            if (square == move.ToSquare)
+                type = (PieceType)boardState.GetPieceAtSquare(move.FromSquare);
+            BoardOps.PopLsb(ref legality_occupancy);
 
-            var blockers = BoardUtils.AllPiecesNoKings(boardState);
-            var pieceType = (PieceType)boardState.GetPieceAtSquare(move.ToSquare);
-            int kingSquare = BoardOps.GetLSB(boardState.GetBitboardFor(kingType));
+            ulong attacks;
+            if (Pieces.Pieces.LeapingPieces.Contains(type))
+            {
+                attacks = _attackTables.LeapingAttackTables.GetAttacksForPiece(type, square);
+            }
+            else
+            {
+                attacks = _attackTables.MagicGenerator.GetAttacksForPiece(type, square, blockers);
+            }
 
-            _ = GeneratePseudoLegalMoves(boardState, boardState.ColorToMove == PlayerColor.White
-                ? PlayerColor.Black : PlayerColor.White)
-                .ToList().Where(m => m.ToSquare == kingSquare) // filter by moves that target the king
-                .ToList().Any(m => check = true);
+            if ((attacks & move_king_square) != 0) is_legal = false;
         }
-        boardState.UndoMove();
 
-        return new(isLegal, check);
+        // check
+        bool is_check = false;
+        if (!is_legal)
+            return new(is_legal, is_check); // cannot be a check if illegal
+
+        var opponent_king_type = move_color == PlayerColor.White
+            ? PieceType.BlackKing : PieceType.WhiteKing;
+        var opponent_king_square = boardState.GetBitboardFor(opponent_king_type);
+        var opponent_king_square_int = BoardOps.GetLSB(opponent_king_square);
+        var move_pieces = move_color == PlayerColor.White ? BoardUtils.WhitePieces(boardState) : BoardUtils.BlackPieces(boardState);
+        move_pieces &= ~BoardOps.SetBit(0UL, move.FromSquare);
+        move_pieces = BoardOps.SetBit(move_pieces, move.ToSquare);
+
+        // filter
+        var check_mask = _attackTables.KingDangerMask[opponent_king_square_int];
+        ulong check_occupancy = check_mask & move_pieces;
+
+        while (check_occupancy != 0)
+        {
+            int square = BoardOps.GetLSB(check_occupancy);
+            var type = (PieceType)boardState.GetPieceAtSquare(square);
+            if (square == move.ToSquare)
+                type = (PieceType)boardState.GetPieceAtSquare(move.FromSquare);
+            BoardOps.PopLsb(ref check_occupancy);
+
+            ulong attacks;
+            if (Pieces.Pieces.LeapingPieces.Contains(type))
+            {
+                attacks = _attackTables.LeapingAttackTables.GetAttacksForPiece(type, square);
+            }
+            else
+            {
+                attacks = _attackTables.MagicGenerator.GetAttacksForPiece(type, square, blockers);
+            }
+            if ((attacks & opponent_king_square) != 0) is_check = true;
+        }
+
+        return new(is_legal, is_check); // TODO GC overhead
     }
 }
